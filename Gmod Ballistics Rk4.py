@@ -1,6 +1,5 @@
-
 RangeX = 10
-Height = 3
+Height = -5
 
 ground = box(pos = vector(0, 0, 0), size = vector(5, 0.2, 1), color = color.green)
 ball   = sphere(pos = vector(0, 0, 0), radius = 0.2, color = color.yellow)
@@ -17,8 +16,9 @@ Caliber   = 120
 Mass      = 100
 DragCoef = (pi*Caliber**2)/(4000000*Mass*DragDiv)
 
-MuzzleVel = 100
+MuzzleVel = 80
 Dt = 0.0005
+M = -0.1
 
 def toRad(th) :
   return th*pi/180
@@ -33,7 +33,7 @@ def length(v1, v2) :
 def rk4(th) :
   p = vector(0, 0, 0)
   v = vector(MuzzleVel*cos(th), MuzzleVel*sin(th), 0)
-  
+  I = 0
   while 1 :
     rate(CalculateSpeed*1000)
     
@@ -54,7 +54,7 @@ def rk4(th) :
     v = v + (Dt/6)*(acc1 + 2*(acc2 + acc3) + acc4)
     ball2.pos = p
     
-    Limit = (Height/RangeX)*p.x
+    Limit = (Height/RangeX)*p.x + M
     if p.y < Limit :
       endpos = p
       break
@@ -73,16 +73,15 @@ def Action(Trig, tolerance) :
   Index = 0
   
   while abs(ball2.pos.x - RangeX) >= tolerance :
-    rk4(theta)
+    EndPos = rk4(theta)
     
-    Error = RangeX - ball2.pos.x
-    IncreaseCoef = 3.5*Error
+    Error = RangeX - EndPos.x
+    IncreaseCoef = Error*2
     
     angle += IncreaseCoef*Sign
     theta = toRad(angle)
     
-    if abs(ball2.pos.x - RangeX) >= tolerance :
-      ball2.pos = vector(0, 0, 0)
+    print(angle)
     
     Index += 1
   
