@@ -1,98 +1,98 @@
-RangeX = 10
-Height = -5
+dx = 8
+dy = 2.5
 
 ground = box(pos = vector(0, 0, 0), size = vector(5, 0.2, 1), color = color.green)
-ball   = sphere(pos = vector(0, 0, 0), radius = 0.2, color = color.yellow)
-ball2  = sphere(pos = vector(0, 0, 0), radius = 0.2, color = color.yellow)
-ball3  = sphere(pos = vector(RangeX, Height, 0), radius = 0.2, color = color.red)
+ball1  = sphere(pos = vector(0, 0, 0), radius = 0.2, color = color.yellow)
+ball2  = sphere(pos = vector(dx, dy, 0), radius = 0.2, color = color.red)
 
-CalculateSpeed = 1
+calculatespeed = 1
+tickinterval = 0.015
 
-Gravity   = vector(0, -600, 0)
-DragDiv   = 40
-VelScale  = 1
+g = vector(0, -600, 0)
+dragdiv  = 40
 
-Caliber   = 120
-Mass      = 100
-DragCoef = (pi*Caliber**2)/(4000000*Mass*DragDiv)
+caliber  = 120
+mass     = 0.01
+dragcoef = (pi*caliber**2)/(4000000*mass*dragdiv)
 
-MuzzleVel = 80
-Dt = 0.0005
-M = -0.1
+muzzleVel = 100
+dt = 0.0005
+m = -0.1
 
-def toRad(th) :
-  return th*pi/180
-
-def toDeg(th) :
-  return th*180/pi
-
-def length(v1, v2) :
-  return sqrt(v1**2 + v2**2)
+def toRad(th) : return th*(pi/180)
+def toDeg(th) : return th*(180/pi)
+def length(v1, v2) : return sqrt(v1**2 + v2**2)
 
 # Runge Kutta 4 Method
 def rk4(th) :
   p = vector(0, 0, 0)
-  v = vector(MuzzleVel*cos(th), MuzzleVel*sin(th), 0)
-  I = 0
+  v = vector(muzzleVel*cos(th), muzzleVel*sin(th), 0)
+  i = 0
   while 1 :
-    rate(CalculateSpeed*1000)
+    rate(calculatespeed*1000)
     
-    k = length(v.x, v.y)*DragCoef
+    k = length(v.x, v.y)*dragcoef
     
     vel1 = v
-    acc1 = Gravity - k*vel1
+    acc1 = g - k*vel1
     
-    vel2 = vel1 + acc1*Dt/2
-    acc2 = Gravity - k*vel2
-    vel3 = vel1 + acc2*Dt/2
-    acc3 = Gravity - k*vel3
+    vel2 = vel1 + acc1*dt/2
+    acc2 = g - k*vel2
+    vel3 = vel1 + acc2*dt/2
+    acc3 = g - k*vel3
     
-    vel4 = vel1 + acc3*Dt
-    acc4 = Gravity - k*vel4
+    vel4 = vel1 + acc3*dt
+    acc4 = g - k*vel4
     
-    p = p + (Dt/6)*(vel1 + 2*(vel2 + vel3) + vel4)
-    v = v + (Dt/6)*(acc1 + 2*(acc2 + acc3) + acc4)
-    ball2.pos = p
+    p = p + (dt/6)*(vel1 + 2*(vel2 + vel3) + vel4)
+    v = v + (dt/6)*(acc1 + 2*(acc2 + acc3) + acc4)
+    ball1.pos = p
+    i += 1
+    time = i*tickinterval
     
-    Limit = (Height/RangeX)*p.x + M
-    if p.y < Limit :
+    limit = (dy/dx)*p.x + m
+    
+    if p.x > dx | p.y < limit :
       endpos = p
       break
   return endpos
 
-def Action(Trig, tolerance) :
-  if Trig == 1 :
-    Az   = 90
-    Sign = -1
+def solve(mod, tolerance) :
+  if mod == 1 :
+    faz   = 90
+    sign = -1
   else :
-    Az   = 0
-    Sign = 1
-  angle = Az
+    faz   = 0
+    sign = 1
+  angle = faz
   theta = toRad(angle)
   
-  Index = 0
+  loopcount = 0
   
-  while abs(ball2.pos.x - RangeX) >= tolerance :
-    EndPos = rk4(theta)
+  while abs(dx - ball1.pos.x) + abs(dy - ball1.pos.y) >= tolerance :
+    endPos = rk4(theta)
     
-    Error = RangeX - EndPos.x
-    IncreaseCoef = Error*2
+    errX = dx - endPos.x
+    errY = dy - endPos.y
+    cor = errX + errY
     
-    angle += IncreaseCoef*Sign
+    angle += cor*sign
     theta = toRad(angle)
     
-    print(angle)
+    if angle > 90 | dy > 0 & angle < 0 :
+      print("can't solve")
+      break
     
-    Index += 1
+    loopcount += 1
   
-  print(toDeg(theta), "/", Index)
+  print(toDeg(theta), "/", loopcount)
   return theta
 
 tolerance = 0.1
 
-Trig   = 0
-theta1 = Action(Trig, tolerance)
-ball2.pos = vector(0, 0, 0)
+mod   = 0
+theta1 = solve(mod, tolerance)
+ball1.pos = vector(0, 0, 0)
 
-Trig   = 1
-theta2 = Action(Trig, tolerance)
+mod   = 1
+theta2 = solve(mod, tolerance)
