@@ -1,5 +1,5 @@
-dx = 8
-dy = 2.5
+dx = 10
+dy = 2
 
 ground = box(pos = vector(0, 0, 0), size = vector(5, 0.2, 1), color = color.green)
 ball1  = sphere(pos = vector(0, 0, 0), radius = 0.2, color = color.yellow)
@@ -18,10 +18,16 @@ dragcoef = (pi*caliber**2)/(4000000*mass*dragdiv)
 muzzleVel = 100
 dt = 0.0005
 m = -0.1
+increase = 1.5
+
 
 def toRad(th) : return th*(pi/180)
 def toDeg(th) : return th*(180/pi)
 def length(v1, v2) : return sqrt(v1**2 + v2**2)
+def toAngle(x, y) : return toDeg(atan(y/x))
+
+fth = toAngle(dx, dy)
+print("target angle: " + round(fth))
 
 # Runge Kutta 4 Method
 def rk4(th) :
@@ -61,23 +67,25 @@ def solve(mod, tolerance) :
   if mod == 1 :
     faz   = 90
     sign = -1
+    text = "high angle: "
   else :
     faz   = 0
     sign = 1
+    text = "low angle: "
+  
   angle = faz
   theta = toRad(angle)
   
   loopcount = 0
-  
   while abs(dx - ball1.pos.x) + abs(dy - ball1.pos.y) >= tolerance :
     endPos = rk4(theta)
     
     errX = dx - endPos.x
     errY = dy - endPos.y
-    cor = errX + errY
+    cor = (errX + errY)*increase
     
     angle += cor*sign
-    theta = toRad(angle)
+    theta = toRad(fth) + toRad(angle)
     
     if angle > 90 | dy > 0 & angle < 0 :
       print("can't solve")
@@ -85,8 +93,7 @@ def solve(mod, tolerance) :
     
     loopcount += 1
   
-  print(toDeg(theta), "/", loopcount)
-  return theta
+  print(text + round(toDeg(theta)), "/", "loop: " + loopcount)
 
 tolerance = 0.1
 
